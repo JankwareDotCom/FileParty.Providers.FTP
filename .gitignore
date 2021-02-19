@@ -1,0 +1,10 @@
+bin/
+obj/
+/packages/
+riderModule.iml
+/_ReSharper.Caches/
+/FileParty.sln.DotSettings.user
+/.idea
+*.DotSettings
+*.nupkg
+*.snupkg

@@ -1,0 +1,30 @@
+name: dotnet_test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 5.0.x
+      - name: Restore dependencies
+        run: dotnet restore
+      - name: Build
+        run: dotnet build --no-restore
+      - name: Test
+        run: dotnet test --no-build --verbosity normal
+        env:
+          "FP_FTP_HOST": ${{ secrets.TEST_FTP_HOST }}
+          "FP_FTP_USER": ${{ secrets.TEST_FTP_USER }}
+          "FP_FTP_PASS": ${{ secrets.TEST_FTP_PASS }}
+          "FP_FTP_PORT": ${{ secrets.TEST_FTP_PORT }}

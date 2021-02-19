@@ -1,0 +1,20 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileParty.Providers.FTP", ".\src\FileParty.Providers.FTP\FileParty.Providers.FTP.csproj", "{CF47CCD4-2B41-4F42-A917-A49C1DEAB525}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileParty.Providers.FTP.Tests", "FileParty.Providers.FTP.Tests\FileParty.Providers.FTP.Tests.csproj", "{5ACDF048-93CE-4063-AA8E-5F135DE5F380}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CF47CCD4-2B41-4F42-A917-A49C1DEAB525}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CF47CCD4-2B41-4F42-A917-A49C1DEAB525}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CF47CCD4-2B41-4F42-A917-A49C1DEAB525}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5ACDF048-93CE-4063-AA8E-5F135DE5F380}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5ACDF048-93CE-4063-AA8E-5F135DE5F380}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5ACDF048-93CE-4063-AA8E-5F135DE5F380}.Release|Any CPU.ActiveCfg = Release|Any CPU
+	EndGlobalSection
+EndGlobal
