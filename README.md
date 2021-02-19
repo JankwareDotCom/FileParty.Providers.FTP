@@ -13,3 +13,4 @@ Register `FTPModule` as you would any other FileParty Module.  This Module has a
 - FTPX509Configuration (for ftps with x509 certs)
 
 ## Contributions / Issues / Requests Welcome
+Check FileParty Core Repository for information
