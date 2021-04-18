@@ -16,11 +16,12 @@ using FluentFTP.Proxy;
 
 namespace FileParty.Providers.FTP
 {
-    public class FTPStorageProvider : IAsyncStorageProvider, IStorageProvider
+    public class FTPStorageProvider : IAsyncStorageProvider, IStorageProvider, IDisposable, IAsyncDisposable
     {
         public char DirectorySeparatorCharacter => _config.DirectorySeparationCharacter;
         private readonly StorageProviderConfiguration<FTPModule> _config;
         private string BasePath = string.Empty;
+        private readonly List<FtpClient> _clients = new List<FtpClient>();
 
         public FTPStorageProvider(StorageProviderConfiguration<FTPModule> config)
         {
@@ -69,6 +70,8 @@ namespace FileParty.Providers.FTP
                 client.ValidateCertificate += (ClientOnValidateCertificate);
             }
 
+            _clients.Add(client);
+            
             return client;
         }
 
@@ -99,7 +102,7 @@ namespace FileParty.Providers.FTP
             if (type == null) throw Errors.FileNotFoundException;
             if (type != StoredItemType.File) throw Errors.MustBeFile;
 
-            using var client = GetClient();
+            var client = GetClient();
             await client.ConnectAsync(cancellationToken);
 
             var stream = await client.OpenReadAsync(GetFullPath(storagePointer), cancellationToken);
@@ -268,6 +271,20 @@ namespace FileParty.Providers.FTP
         public IStoredItemInformation GetInformation(string storagePointer)
         {
             return GetInformationAsync(storagePointer, CancellationToken.None).Result;
+        }
+
+        public void Dispose()
+        {
+            foreach (var client in _clients.Where(x => !x.IsDisposed))
+            {
+                client.Dispose();
+            }
+        }
+
+        public ValueTask DisposeAsync()
+        {
+            Dispose();
+            return new ValueTask();
         }
     }
 }
