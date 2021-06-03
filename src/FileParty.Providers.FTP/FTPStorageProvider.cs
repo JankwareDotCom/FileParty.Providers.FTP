@@ -162,7 +162,7 @@ namespace FileParty.Providers.FTP
             return result;
         }
         
-        public async Task WriteAsync(FilePartyWriteRequest request, CancellationToken cancellationToken)
+        public async Task WriteAsync(FilePartyWriteRequest request, CancellationToken cancellationToken = default)
         {
             if (await ExistsAsync(request.StoragePointer, cancellationToken) && request.WriteMode == WriteMode.Create)
             {
