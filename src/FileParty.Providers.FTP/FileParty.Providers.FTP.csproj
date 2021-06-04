@@ -10,7 +10,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="FileParty.Core" Version="1.0.0" />
+        <PackageReference Include="FileParty.Core" Version="1.0.2" />
         <PackageReference Include="FluentFTP" Version="34.0.0" />
     </ItemGroup>
 
