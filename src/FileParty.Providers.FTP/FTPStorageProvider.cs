@@ -40,13 +40,21 @@ namespace FileParty.Providers.FTP
             FtpClient client;
             if (baseConfig.ProxyInfo != null)
             {
-                client = baseConfig.ProxyInfo.ProxyType switch
+                switch (baseConfig.ProxyInfo.ProxyType)
                 {
-                    ProxyType.HTTP1_1 => new FtpClientHttp11Proxy(baseConfig.ProxyInfo),
-                    ProxyType.USER_AT_HOST => new FtpClientUserAtHostProxy(baseConfig.ProxyInfo),
-                    ProxyType.BLUE_COAT => new FtpClientBlueCoatProxy(baseConfig.ProxyInfo),
-                    _ => new FtpClient()
-                };
+                    case ProxyType.HTTP1_1:
+                        client = new FtpClientHttp11Proxy(baseConfig.ProxyInfo);
+                        break;
+                    case ProxyType.USER_AT_HOST:
+                        client = new FtpClientUserAtHostProxy(baseConfig.ProxyInfo);
+                        break;
+                    case ProxyType.BLUE_COAT:
+                        client = new FtpClientBlueCoatProxy(baseConfig.ProxyInfo);
+                        break;
+                    default:
+                        client = new FtpClient();
+                        break;
+                }
             }
             else
             {
@@ -87,8 +95,8 @@ namespace FileParty.Providers.FTP
                 : BasePath;
             
             var dirSep =
-                BasePath.EndsWith(DirectorySeparatorCharacter) && 
-                !storagePointer.StartsWith(DirectorySeparatorCharacter)
+                BasePath.EndsWith(DirectorySeparatorCharacter.ToString()) && 
+                !storagePointer.StartsWith(DirectorySeparatorCharacter.ToString())
                     ? string.Empty
                     : DirectorySeparatorCharacter.ToString();
 
@@ -117,15 +125,16 @@ namespace FileParty.Providers.FTP
 
         public async Task<IDictionary<string, bool>> ExistsAsync(IEnumerable<string> storagePointers, CancellationToken cancellationToken = new CancellationToken())
         {
-            using var client = GetClient();
-            await client.ConnectAsync(cancellationToken);
             var result = new Dictionary<string, bool>();
-            
-            foreach (var storagePointer in storagePointers)
+            using (var client = GetClient())
             {
-                result[storagePointer] =
-                    await client.FileExistsAsync(GetFullPath(storagePointer), cancellationToken) ||
-                    await client.DirectoryExistsAsync(GetFullPath(storagePointer), cancellationToken);
+                await client.ConnectAsync(cancellationToken);
+                foreach (var storagePointer in storagePointers)
+                {
+                    result[storagePointer] =
+                        await client.FileExistsAsync(GetFullPath(storagePointer), cancellationToken) ||
+                        await client.DirectoryExistsAsync(GetFullPath(storagePointer), cancellationToken);
+                }
             }
 
             return result;
@@ -139,27 +148,29 @@ namespace FileParty.Providers.FTP
 
         public async Task<IStoredItemInformation> GetInformationAsync(string storagePointer, CancellationToken cancellationToken = new CancellationToken())
         {
-            using var client = GetClient();
-            if (client == null) throw Errors.UnknownException;
-            await client.ConnectAsync(cancellationToken);
-            
-            if (!await client.FileExistsAsync(GetFullPath(storagePointer), cancellationToken)) return null;
-            
-            var info = await client.GetObjectInfoAsync(GetFullPath(storagePointer), true, cancellationToken);
-            var result = new StoredItemInformation
+            using (var client = GetClient())
             {
-                CreatedTimestamp = info?.Created,
-                DirectoryPath = GetFullPath(storagePointer),
-                LastModifiedTimestamp = info?.Modified,
-                Name = info?.Name,
-                Size = info?.Size,
-                StoragePointer = storagePointer,
-                StoredType = info?.Type == FtpFileSystemObjectType.Directory 
-                    ? StoredItemType.Directory 
-                    : StoredItemType.File
-            };
+                if (client == null) throw Errors.UnknownException;
+                await client.ConnectAsync(cancellationToken);
+            
+                if (!await client.FileExistsAsync(GetFullPath(storagePointer), cancellationToken)) return null;
+            
+                var info = await client.GetObjectInfoAsync(GetFullPath(storagePointer), true, cancellationToken);
+                var result = new StoredItemInformation
+                {
+                    CreatedTimestamp = info?.Created,
+                    DirectoryPath = GetFullPath(storagePointer),
+                    LastModifiedTimestamp = info?.Modified,
+                    Name = info?.Name,
+                    Size = info?.Size,
+                    StoragePointer = storagePointer,
+                    StoredType = info?.Type == FtpFileSystemObjectType.Directory 
+                        ? StoredItemType.Directory 
+                        : StoredItemType.File
+                };
 
-            return result;
+                return result;   
+            }
         }
         
         public async Task WriteAsync(FilePartyWriteRequest request, CancellationToken cancellationToken = default)
@@ -168,31 +179,33 @@ namespace FileParty.Providers.FTP
             {
                 throw Errors.FileAlreadyExistsException;
             }
-            
-            using var client = GetClient();
-            if (client == null)
+
+            using (var client = GetClient())
             {
-                throw Errors.UnknownException;
-            }
-            await client.ConnectAsync(cancellationToken);
-            var reply = await client.UploadAsync(
-                request.Stream, 
-                GetFullPath(request.StoragePointer), 
-                FtpRemoteExists.Overwrite, 
-                true, 
-                new Progress<FtpProgress>(a => 
-                    WriteProgressEvent?.Invoke(
-                        this, 
-                        new WriteProgressEventArgs(
-                            request.Id, 
-                            request.StoragePointer, 
-                            a.TransferredBytes, 
-                            request.Stream.Length)))
-                ,cancellationToken);
+                if (client == null)
+                {
+                    throw Errors.UnknownException;
+                }
+                await client.ConnectAsync(cancellationToken);
+                var reply = await client.UploadAsync(
+                    request.Stream, 
+                    GetFullPath(request.StoragePointer), 
+                    FtpRemoteExists.Overwrite, 
+                    true, 
+                    new Progress<FtpProgress>(a => 
+                        WriteProgressEvent?.Invoke(
+                            this, 
+                            new WriteProgressEventArgs(
+                                request.Id, 
+                                request.StoragePointer, 
+                                a.TransferredBytes, 
+                                request.Stream.Length)))
+                    ,cancellationToken);
             
-            if (reply != FtpStatus.Success)
-            {
-                throw new StorageException("FTP-002", "FTP Server did not indicate success");
+                if (reply != FtpStatus.Success)
+                {
+                    throw new StorageException("FTP-002", "FTP Server did not indicate success");
+                }   
             }
         }
 
@@ -208,19 +221,21 @@ namespace FileParty.Providers.FTP
 
         public async Task DeleteAsync(IEnumerable<string> storagePointers, CancellationToken cancellationToken = new CancellationToken())
         {
-            using var client = GetClient();
-            if (client == null) throw Errors.UnknownException;
-            await client.ConnectAsync(cancellationToken);
-            
-            foreach (var storagePointer in storagePointers)
+            using (var client = GetClient())
             {
-                if(await client.DirectoryExistsAsync(GetFullPath(storagePointer),cancellationToken))
+                if (client == null) throw Errors.UnknownException;
+                await client.ConnectAsync(cancellationToken);
+            
+                foreach (var storagePointer in storagePointers)
                 {
-                    await client.DeleteDirectoryAsync(GetFullPath(storagePointer), cancellationToken);
-                } 
-                else if (await client.FileExistsAsync(GetFullPath(storagePointer), cancellationToken))
-                {
-                    await client.DeleteFileAsync(GetFullPath(storagePointer), cancellationToken);
+                    if(await client.DirectoryExistsAsync(GetFullPath(storagePointer),cancellationToken))
+                    {
+                        await client.DeleteDirectoryAsync(GetFullPath(storagePointer), cancellationToken);
+                    } 
+                    else if (await client.FileExistsAsync(GetFullPath(storagePointer), cancellationToken))
+                    {
+                        await client.DeleteFileAsync(GetFullPath(storagePointer), cancellationToken);
+                    }
                 }
             }
         }
