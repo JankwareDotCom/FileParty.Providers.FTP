@@ -11,7 +11,7 @@
 
     <ItemGroup>
         <PackageReference Include="FileParty.Core" Version="1.1.*" />
-        <PackageReference Include="FluentFTP" Version="36.1.*"
+        <PackageReference Include="FluentFTP" Version="39.3.*"
             IncludeAssets="all"
             PrivateAssets="compile"/>
     </ItemGroup>
